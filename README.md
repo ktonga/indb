@@ -3,11 +3,11 @@ INDB
 
 __Work in progress__
 
-INDB is a set of libraries, utilities and applications to help you decide what to watch next. It intends to achieve that by augmenting the titles on your Netflix list with extra information from IMDB, so that you can filter and sort the titles using the needed criteria to let you find exactly what you are looking for.
+INDB is a set of libraries, utilities and applications to help you decide what to watch next. It intends to achieve that by augmenting the titles on your Netflix list with extra information from [TMDB](https://www.themoviedb.org/), so that you can filter and sort the titles using the needed criteria to let you find exactly what you are looking for.
 
 ## Modules
 
- - [ ] **Core library**: exposes functions to get the merge of all sources. It will return the list of titles plus all the extra info from IMDB to be used by the apps
+ - [ ] **Core library**: exposes functions to get the merge of all sources. It will return the list of titles plus all the extra info from TMDB to be used by the apps
  - [ ] **Export to file**: saves the enhanced titles as a local file in multiple formats
  - [ ] **Export to IMDB**: adds the titles to a list in your IMDB account
  - [ ] **Command line**: app that lets you use all the functionality from the libs quickly from the terminal
