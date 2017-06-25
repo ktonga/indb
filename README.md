@@ -13,6 +13,7 @@ INDB is a set of libraries, utilities and applications to help you decide what t
  - [ ] **Command line**: app that lets you use all the functionality from the libs quickly from the terminal
  - [ ] **REST endpoint**: exposes all the functionality to be accessed over HTTP
  - [ ] **Web interface**: simple and small web app to work with your list on the browser
+ - [ ] **Chatbot**: just for fun, ask a friendly cahtbot for recommendations on what to watch
 
 ## TODO
 
