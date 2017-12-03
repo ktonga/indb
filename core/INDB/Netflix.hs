@@ -2,26 +2,18 @@
 
 module INDB.Netflix where
 
-import Control.Lens
+import Control.Lens ((&), (.~), (^.), (^..))
 import Data.Aeson
+import Data.Aeson.Lens
 import qualified Data.ByteString as BS
-import Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy (ByteString, toStrict)
 import qualified Data.ByteString.Lazy.Char8 as LC8
 import Data.ByteString.Lazy.Search
-import Data.List (find)
-import Data.List.Split (chop)
 import Data.Maybe (fromMaybe)
-import Data.Text (Text, strip, unpack)
-import Data.Text.Lazy.Encoding (decodeUtf8)
+import Data.Text (Text)
+import Data.Text.Encoding (decodeUtf8)
+import qualified Data.Vector as V
 import Network.Wreq
-import qualified Network.Wreq.Session as Sess
-import Safe (headMay, tailSafe)
-import Text.Taggy.Parser
-import Text.Taggy.Types
-
-type EMail = ByteString
-
-type Password = ByteString
 
 type CookieHeaderValue = BS.ByteString
 
@@ -30,53 +22,35 @@ data NetflixTitle = NetflixTitle
   , coverUrl :: Text
   } deriving (Eq, Show)
 
-myListHtmlLogin :: EMail -> Password -> IO ByteString
-myListHtmlLogin email password =
-  Sess.withSession $ \sess -> do
-    lr <- Sess.get sess "https://www.netflix.com/login"
-    let html = lr ^. responseBody
-    let authURL' = authURL html
-    Sess.post sess "https://www.netflix.com/login" $ params authURL'
-    r <- Sess.get sess "https://www.netflix.com/browse/my-list"
-    return (r ^. responseBody)
+netflixMyListTitles :: CookieHeaderValue -> IO [Value]
+netflixMyListTitles cookie = do
+  mlId <- myListId cookie
+  r <- postWith opts url (myListQuery mlId)
+  let bs = r ^. responseBody
+  return (bs ^.. key "value" . key "videos" . members . key "title")
   where
-    authURL bs =
-      let (_, after) = breakAfter "authURL\" value=\"" bs
-      in LC8.takeWhile (/= '"') after
-    params au =
-      [ "email" := email
-      , "password" := password
-      , "rememberMe" := ("true" :: ByteString)
-      , "flow" := ("websiteSignUp" :: ByteString)
-      , "mode" := ("login" :: ByteString)
-      , "action" := ("loginAction" :: ByteString)
-      , "withFields" :=
-        ("email,password,rememberMe,nextPage,showPassword" :: ByteString)
-      , "authURL" := au
-      , "nextPage" := ("" :: ByteString)
-      , "showPassword" := ("" :: ByteString)
-      ]
-
-myListHtmlCookie :: CookieHeaderValue -> IO ByteString
-myListHtmlCookie cookie =
-  let r = getWith opts "https://www.netflix.com/browse/my-list"
-  in fmap (^. responseBody) r
-  where
+    url =
+      "https://www.netflix.com/api/shakti/a468598e/pathEvaluator" ++
+      "?withSize=false&materialize=true&isWatchlistEnabled=true"
     opts = defaults & header "Cookie" .~ [cookie]
 
-parseTitles :: ByteString -> [NetflixTitle]
-parseTitles htmlBS =
-  let tags = taggyWith True $ decodeUtf8 htmlBS
-  in chop nextTitle $ dropTilCover tags
+myListId :: CookieHeaderValue -> IO Text
+myListId cookie = do
+  r <- getWith opts "https://www.netflix.com/browse/my-list"
+  let bs = r ^. responseBody
+      id = (decodeUtf8 . toStrict . findId) bs
+  return id
   where
-    nextTitle ts =
-      let (Just nt) = do
-            (TagOpen _ coverAttrs _) <- headMay ts
-            cover <- attrValue <$> find ((== "style") . attrKey) coverAttrs
-            (TagText title) <- find isTagText ts
-            return (NetflixTitle (strip title) cover)
-      in (nt, (dropTilCover . tailSafe) ts)
-    dropTilCover = dropWhile (not . isCoverTag)
-    isCoverTag (TagOpen "div" as _) =
-      Attribute "class" "video-artwork" `elem` as
-    isCoverTag _ = False
+    opts = defaults & header "Cookie" .~ [cookie]
+    token = "\"lists\":{\""
+    findId = LC8.takeWhile (/= '"') . snd . breakAfter token
+
+myListQuery :: Text -> Value
+myListQuery id =
+  let array vs = Array (V.fromList vs)
+      range = object ["from" .= Number 0, "to" .= Number 200]
+      myListPath = [String "lists", String id, range]
+      myListSummary =
+        array (myListPath ++ [array ["summary", "title", "userRating"]])
+      myListBoxart = array (myListPath ++ ["boxarts", "_342x192", "webp"])
+  in object ["paths" .= array [myListSummary, myListBoxart]]

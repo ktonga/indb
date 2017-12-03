@@ -21,11 +21,11 @@ library
                      , stringsearch
                      , wreq
                      , lens
-                     , taggy
                      , text
                      , safe
-                     , split
                      , aeson
+                     , lens-aeson
+                     , vector
   default-language:    Haskell2010
 
 source-repository head
