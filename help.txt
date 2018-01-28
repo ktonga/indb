@@ -6,7 +6,9 @@ so that the rest of the features can be used without connection.
 
 Fetching:
   -f, --fetch                      Fetch an updated version of "My List" with latest info from TMDB and exit
-  -k, --cookie=COOKIE              Specify Netflix's Cookie header. Default: content of ~/.indb/cookie
+  -R, --extra-regions=REG[,REG]    Provide extra regions in addition to default one to reconcile titles from
+                                   multiple regions (using VPN)
+  -k, --cookie=COOKIE              Specify Netflix's Cookie header. Default: content of ~/.indb/netflix-cookie
 
 Filtering:
   -m, --movie                      Movies only
@@ -15,7 +17,7 @@ Filtering:
   -d, --duration=RANGE             Show only titles which duration (in minutes) is in RANGE.
                                    Range format: min,max | <max | >min
   -g, --genre=GENRE[,GENRE]        Show only titles in any of the specified GENREs
-  -q, --query                      If filter shorcuts are not enough you can specify the filtering criteria
+  -q, --query                      If filter shortcuts are not enough you can specify the filtering criteria
                                    using simple expression language.
 
 Sort and count:
@@ -29,7 +31,7 @@ Format:
                                    This is the default format using Tab as delimiter
   -d, --details                    Format as Details.
                                    Each field in its own line in the form 'name: value',
-                                   titles are separater by a blank line
+                                   titles are separated by a blank line
   -i, --include=FIELD[,FIELD]      Include only specified fields
 
 Misc:
